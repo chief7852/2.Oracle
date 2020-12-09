@@ -148,7 +148,7 @@ FROM emp;
   SELECT empno, ename ,sal, deptno,
         ROUND(AVG(sal) OVER (PARTITION BY deptno),2) AS sal_avg,
         MAX(sal)OVER (PARTITION BY deptno) max_sal,
-        MIN(sal)OVER (PARTITION BY deptno) max_sal
+        MIN(sal)OVER (PARTITION BY deptno) min_sal
   FROM EMP;
   
   
@@ -158,7 +158,30 @@ FROM emp;
 
 과제 : 위의 SQL을 분석함수를 사용하지 않고 작성하기
 
+SELECT A.EMPNO, A.ENAME ,A.SAL,A.DEPTNO, B.SAL_AVG, B.MAX_SAL, B.MIN_SAL
+  FROM EMP A,(SELECT DEPTNO AS DEO,
+                     ROUND(AVG(SAL),2) AS SAL_AVG,
+                     MAX(SAL) AS MAX_SAL,
+                     MIN(SAL) AS MIN_SAL
+                     FROM EMP
+                     GROUP BY DEPTNO) B
+  
+  WHERE A.DEPTNO = B.DEO
+  ORDER BY A.DEPTNO;
 
+
+
+
+급여 평균을 조회);
+SELECT  DEPTNO,
+        ROUND(AVG(SAL),2),
+        GREATEST(SAL)
+   FROM EMP
+   GROUP BY DEPTNO;
+   
+   SELECT GREATEST(SAL)
+   FROM EMP;
+   
 
 
 
