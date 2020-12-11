@@ -201,17 +201,28 @@ SELECT ROWNUM, empno, ename
 FROM emp
 WHERE ROWNUM > 5;
 
+
 1PAGE :1~10
 2PAGE : 11~20
 
-1PAGE
+1PAGE 페이즈 사이즈가 10 일때
+1PAGE :1~10
+2PAGE : 11~20
+n PAGE :(:page-1) * :pageSize + 1 ~ :page *:pageSize
+
+1PAGE 페이즈 사이즈가 5 일때
+1PAGE :1~5
+2PAGE : 6~10
+
+
 SELECT ROWNUM, a.*
 FROM
 (SELECT empno, ename, hiredate
 FROM emp
 ORDER BY hiredate DESC)A
 WHERE ROWNUM BETWEEN 1 AND 10; --1PAGHE
-2PAGE
+2PAGE 
+
 SELECT *
 FROM
 (SELECT ROWNUM rn, a.*
@@ -227,4 +238,4 @@ FROM
 FROM(SELECT empno, ename, hiredate
       FROM emp
       ORDER BY hiredate DESC) a)
-WHERE rn BETWEEN :ST AND :ED; 
+WHERE rn BETWEEN (:page-1) * :pageSize+1 AND :page * :pageSize;
