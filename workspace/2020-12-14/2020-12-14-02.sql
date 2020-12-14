@@ -1,0 +1,123 @@
+2020-12-14-02)
+PL/SQL (복합변수)
+점(컬럼)   - 선(행)    - 면(테이블)
+. TYPE     %ROWTYPE  TABLE TYQE
+        RECORD TYPE
+        
+        
+ROWTYPE : 행 전체를 저장할 수 있는 변수
+          컬럼이 많은 테이블의 값을 변수로 담을 때 컬럼별로 변수를 선언하지 않고
+          행단위로 한번만 선언을 하고 사용하므로 편의성이 증대된다
+          
+DEPT 테이블의 10번 부서정보를 담을 수 있는 ROWTYPE을 선언하여 활동
+SET SERVEROUTPUT ON;
+
+ DECLARE
+    --변수명 변수타입
+    V_DEPT_ROW  DEPT%ROWTYPE;
+ BEGIN
+  SELECT * INTO V_DEPT_ROW
+  FROM DEPT
+  WHERE DEPTNO =10;
+  
+  --컬럼의 값 접근 : ROWTYPE.컬럼명
+  DBMS_OUTPUT.PUT_LINE( V_DEPT_ROW.DNAME || ' / ' || V_DEPT_ROW.LOC);
+  
+  END;
+  /
+  
+  
+    RECORD TYPE : 개발자가 저장하려하는 컬럼을 직접 지정하여 행에대한 타입을 선언
+                  (JAVA에서 클래스를 선언)
+선언방법
+TYPE 타입명 IS RECORD(
+    컬럼명 컬럼타입,
+    컬럼명2 컬럼타입,
+)
+ 사용예) 
+  
+ TYPE 타입명 IS RECORD(
+ ENAME EMP.ENAME%TYPE,
+  DNAME DEPT.DNAME%TYPE(
+  
+  
+  
+  
+DECLARE
+  TYPE NAME_ROW IS RECORD(  
+    ENAME EMP.ENAME%TYPE,
+    DNAME DEPT.DNAME%TYPE);
+    --변수명 변수타입
+  NAMES NAME_ROW;
+BEGIN
+  SELECT ENAME, DNAME INTO NAMES
+  FROM EMP,DEPT
+  WHERE EMP.DEPTNO = DEPT.DEPTNO
+    AND EMPNO = 7839;
+    DBMS_OUTPUT.PUT_LINE(NAMES.ENAME ||' /'|| NAMES.DNAME);
+END;
+/
+  
+
+
+
+
+
+
+TABLE TYPE : 여러행을 저장할 수 있는 타입  
+
+TYPE 타입이름 IS RECORD
+TYPE 타입이름 IS TABLE OF 레코드 타입 / %ROWTYPE INDEX BY BINARY_INTEGER
+--                                      = int [] arr = new int [50]
+
+
+DECLARE
+  TYPE NAME_ROW IS RECORD(  
+    ENAME EMP.ENAME%TYPE,
+    DNAME DEPT.DNAME%TYPE);
+    
+    TYPE NAME_TAB IS TABLE OF NAME_ROW INDEX BY BINARY_INTEGER;
+    --변수명 변수타입
+  NAMES NAME_TAB;
+BEGIN
+  SELECT ENAME, DNAME BULK COLLECT INTO NAMES
+  FROM EMP,DEPT
+  WHERE EMP.DEPTNO = DEPT.DEPTNO;
+  
+    
+    FOR i IN 1..NAMES.COUNT LOOP
+    DBMS_OUTPUT.PUT_LINE(NAMES(1).ENAME ||' /'|| NAMES(1).DNAME);
+    END FOR;
+    DBMS_OUTPUT.PUT_LINE(NAMES(1).ENAME ||' /'|| NAMES(1).DNAME);
+    DBMS_OUTPUT.PUT_LINE(NAMES(2).ENAME ||' /'|| NAMES(2).DNAME);
+    DBMS_OUTPUT.PUT_LINE(NAMES(3).ENAME ||' /'|| NAMES(3).DNAME);
+    DBMS_OUTPUT.PUT_LINE(NAMES(14).ENAME ||' /'|| NAMES(14).DNAME);
+END;
+/
+  
+
+
+
+
+DECLARE
+  TYPE NAME_ROW IS RECORD(  
+    ENAME EMP.ENAME%TYPE,
+    DNAME DEPT.DNAME%TYPE);
+    
+    TYPE NAME_TAB IS TABLE OF NAME_ROW INDEX BY BINARY_INTEGER;
+    --변수명 변수타입
+  NAMES NAME_TAB;
+BEGIN
+  SELECT ENAME, DNAME BULK COLLECT INTO NAMES
+  FROM EMP,DEPT
+  WHERE EMP.DEPTNO = DEPT.DEPTNO;
+  
+    
+    FOR i IN 1..NAMES.COUNT LOOP
+    DBMS_OUTPUT.PUT_LINE(NAMES(i).ENAME ||' /'|| NAMES(i).DNAME);
+
+    END LOOP;
+    END;
+    /
+
+  

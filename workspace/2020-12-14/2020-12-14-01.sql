@@ -1,0 +1,230 @@
+2020-12-14-01)
+. registdept_test procedure 생성
+. param : deptno, dname, loc
+. logic : 입력받은 부서 정보를 dept테이블에 신규 입력
+. exec registdept_test ( 99, 'ddit' , 'daejeon');
+. dept_test 테이블에 정상적으로 입력 되었는지 확인(SQL-눈으로)
+
+CREATE  PROCEDURE REGISTDEPT_TEST(DEPTNO DEPT_TEST.DEPTNO%TYPE,
+                                DNAME DEPT_TEST.DNAME%TYPE,
+                                LOC DEPT_TEST.LOC%TYPE) IS
+
+BEGIN
+INSERT INTO DEPT_TEST VALUES (DEPTNO,DNAME, LOC);
+
+END;
+/
+
+
+EXEC REGISTDEPT_TEST(98,'DDIT','대전');
+
+SELECT*
+FROM DEPT_TEST;
+
+
+
+--CTAS-- : CHECK 제약을 제외한 나머지 제약조건들을 적용되지 않는다.
+CREATE TABLE DEPT_TEST AS 
+SELECT *
+FROM DEPT
+WHERE 1 = 2;
+
+SELECT *
+FROM DEPT_TEST;
+
+INSERT INTO DEPT_TEST VALUES (99, 'DDIT', 'DAEJEON');
+ROLLBACK;
+
+DROP TABLE DEPT_TEST;
+
+
+
+(예제)
+. UPDATE DEPT_TEST PROCEDURE 생성
+. PARAM : DEPTNO, DNAME , LOC
+. LOGUC : 입력받은 부서 정보를 DEPT_TEST 테이블에 정보수정
+. EXEC UPDATE DEPT_TEST (99, 'DDIT_M', 'DAEJEON');
+. DEPT_TEST 테이블에 정상적으로 갱신 되었는지 확인(SQL-눈으로)
+
+CREATE OR REPLACE PROCEDURE UPDATEDEPT_TEST (P_DEPTNO DEPT_TEST.DEPTNO%TYPE,
+                                            P_DNAME DEPT_TEST.DNAME%TYPE,
+                                            P_LOC DEPT_TEST.LOC%TYPE) IS
+
+BEGIN
+  UPDATE DEPT_TEST SET DNAME = P_DNAME, LOC = P_LOC
+  WHERE DEPTNO = P_DEPTNO;
+  
+
+END;
+/
+
+EXEC UPDATEDEPT_TEST (98, 'DDIT_M', '대전');
+
+SELECT *
+FROM DEPT_TEST;
+
+
+--직원별로 월급
+SELECT EMPNO, ENAME, SAL
+FROM EMP;
+
+
+--급여등급
+SELECT *
+FROM SALGRADE;
+
+SELECT A.EMPNO, A.ENAME, A.SAL, B.GRADE
+FROM EMP A, SALGRADE B
+WHERE A.SAL >= B.LOSAL
+  AND A.SAL <= B.HISAL;
+  
+
+예제)
+. 모든사원에 대해 사원번호, 사원이름,입사일자,급여를 급여가 낮은순으로
+  조회해 보자. 급여가 동일할 경우 사원번호가 빠른사람이 우선순위가 높다
+. 우선순위가 가장 낮은 사람부터 본인까지의 급여 합을 새로운 컬럼으로 생성
+. WINDOW 함수없이
+
+SELECT A.EMPNO,A.ENAME, A.SAL, SUM(B.SAL)
+FROM
+(SELECT EMPNO, ENAME , SAL
+FROM EMP
+ORDER BY SAL, EMPNO) A,
+(SELECT EMPNO, ENAME , SAL
+FROM EMP
+ORDER BY SAL, EMPNO) B
+WHERE A.SAL >= B.SAL
+GROUP BY A.EMPNO, A.ENAME, A.SAL
+ORDER BY A.SAL;
+
+위에 식과 동일한 값(위에 식은 굉장히 비효율적 의미가없는 IN LINE VIEW)
+SELECT A.EMPNO,A.ENAME, A.SAL, SUM(B.SAL)
+FROM EMP A, EMP B
+WHERE A.SAL >= B.SAL
+GROUP BY A.EMPNO, A.ENAME, A.SAL
+ORDER BY A.SAL;
+
+
+
+SELECT A.EMPNO, A.ENAME, A.SAL, SUM(A.SAL) OVER (ORDER BY SAL, EMPNO)
+FROM EMP A;
+
+
+SELECT A.EMPNO , A.ENAME, A.SAL, SUM(B.SAL) C_SUM
+FROM
+(SELECT A.*, ROWNUM RN
+FROM
+(SELECT EMPNO, ENAME, SAL
+ FROM EMP
+ ORDER BY SAL, EMPNO) A) A,
+ (SELECT A.*, ROWNUM RN
+FROM
+(SELECT EMPNO, ENAME, SAL
+ FROM EMP
+ ORDER BY SAL, EMPNO) A) B
+WHERE A.RN >= B.RN
+GROUP BY A.EMPNO, A.ENAME, A.SAL
+ORDER BY A.SAL, A.EMPNO;
+
+
+
+SELECT *
+FROM EMP
+WHERE LOWER(ENAME) =  'smith';
+
+SELECT *
+FROM EMP
+WHERE UPPER(LOWER(ENAME)) = UPPER('smith');
+
+
+
+예제)
+1. 행을 임의로 생성
+
+SINGLE ROW FUNCTION : LENGTH, LOWER
+MULTI ROW FUNCTION : MAX, SUM, MIN
+
+SELECT LENGTH('HELLO,WORLD')
+FROM DUAL;
+
+SELECT EMP.* ,LENGTH('HELLO,WORLD')
+FROM EMP;
+
+
+SELECT
+
+SELECT EMPNO,SAL,LEVEL
+FROM DUAL
+CONNECT BY LEVEL <= 10;
+
+
+
+SELECT LEVEL RN
+FROM DUAL
+CONNECT BY LEVEL <= (SELECT COUNT(*) FROM EMP);
+
+
+SELECT DEPTNO, COUNT(*) CNT
+FROM EMP
+GROUP BY DEPTNO;
+
+SELECT ROWNUM R,B.*
+FROM
+(SELECT  A.DEPTNO, B.RN
+FROM
+(SELECT DEPTNO, COUNT(*) CNT
+FROM EMP
+GROUP BY DEPTNO)A,
+(SELECT LEVEL RN
+FROM DUAL
+CONNECT BY LEVEL <= (SELECT COUNT(*) FROM EMP))B
+WHERE  A. CNT >=B.RN
+ORDER BY A.DEPTNO, B.RN)B;
+
+
+
+
+
+
+
+SELECT  A.empno, a.sal, a.deptno, B.rn
+FROM
+(SELECT ROWNUM r, a.*
+FROM 
+(SELECT empno, sal, deptno
+ FROM emp
+ ORDER BY deptno, sal, empno) a ) a, 
+ 
+ (SELECT ROWNUM r, b.*
+FROM 
+(SELECT a.deptno, b.rn
+FROM
+(SELECT deptno, COUNT(*) cnt
+ FROM emp
+ GROUP BY deptno) a,
+
+(SELECT LEVEL rn
+ FROM dual
+ CONNECT BY LEVEL <= (SELECT COUNT(*) FROM emp)) b
+WHERE a.cnt >= b.rn
+ORDER BY a.deptno, b.rn) b ) b
+WHERE a.r = b.r;
+
+
+PL/SQL (복합변수)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
