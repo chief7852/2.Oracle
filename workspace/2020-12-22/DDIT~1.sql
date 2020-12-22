@@ -1,0 +1,9 @@
+SQL = INSERT INTO RESTAURANTS(RES_ID,RES_NAME,COUSINE,OPEN_TIME,CLOSE_TIME,ADD1,DISTANCE)
+ VALUES((select nvl(max(RES_ID),0)+1 as new from RESTAURANTS)
+ ,?,?,?,?,?,?);
+ 
+ 
+ 
+ 
+ 
+ 
